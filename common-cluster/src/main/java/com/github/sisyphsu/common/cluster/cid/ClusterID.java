@@ -1,4 +1,4 @@
-package com.github.sisyphsu.common.cluster.id;
+package com.github.sisyphsu.common.cluster.cid;
 
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -122,7 +122,7 @@ public class ClusterID extends Thread {
                         if (this.tryLockNode(nodeID)) {
                             this.updateStatus(ClusterIDStatus.LOCK, nodeID); // ZK重连后继续锁定旧ID
                         } else {
-                            log.warn("lock old nodeID[{}] failed!!!", nodeID);
+                            log.warn("dlock old nodeID[{}] failed!!!", nodeID);
                             this.updateStatus(ClusterIDStatus.NONE, -1); // 当前ID被抢占, 可能导致集群在过去一段时间内出现重复ID
                         }
                     } catch (Exception e) {

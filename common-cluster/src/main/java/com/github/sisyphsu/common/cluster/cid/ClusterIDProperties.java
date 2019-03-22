@@ -1,4 +1,4 @@
-package com.github.sisyphsu.common.cluster.id;
+package com.github.sisyphsu.common.cluster.cid;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,6 +22,6 @@ public class ClusterIDProperties {
     /**
      * ID锁路径
      */
-    private String path = "/cluster-id";
+    private String path = "/cluster-cid";
 
 }

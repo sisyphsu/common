@@ -1,6 +1,6 @@
-package com.github.sisyphsu.common.cluster.lock;
+package com.github.sisyphsu.common.cluster.dlock;
 
-import com.github.sisyphsu.common.cluster.id.ClusterID;
+import com.github.sisyphsu.common.cluster.cid.ClusterID;
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 @Slf4j
 public class DistributedLock {
 
-    private static final String ACQUIRE_FILE = "lua/lock-acquire.lua";
+    private static final String ACQUIRE_FILE = "lua/dlock-acquire.lua";
 
     private ClusterID clusterID;
     private StringRedisTemplate template;

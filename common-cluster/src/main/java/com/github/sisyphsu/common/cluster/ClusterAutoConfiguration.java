@@ -1,9 +1,9 @@
 package com.github.sisyphsu.common.cluster;
 
-import com.github.sisyphsu.common.cluster.id.ClusterID;
-import com.github.sisyphsu.common.cluster.id.ClusterIDProperties;
-import com.github.sisyphsu.common.cluster.lock.DistributedLock;
-import com.github.sisyphsu.common.cluster.lock.DistributedLockProperties;
+import com.github.sisyphsu.common.cluster.cid.ClusterID;
+import com.github.sisyphsu.common.cluster.cid.ClusterIDProperties;
+import com.github.sisyphsu.common.cluster.dlock.DistributedLock;
+import com.github.sisyphsu.common.cluster.dlock.DistributedLockProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;

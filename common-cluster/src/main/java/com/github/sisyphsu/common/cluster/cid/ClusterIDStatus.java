@@ -1,4 +1,4 @@
-package com.github.sisyphsu.common.cluster.id;
+package com.github.sisyphsu.common.cluster.cid;
 
 /**
  * 集群ID状态

@@ -1,4 +1,4 @@
-package com.github.sisyphsu.common.cluster.lock;
+package com.github.sisyphsu.common.cluster.dlock;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

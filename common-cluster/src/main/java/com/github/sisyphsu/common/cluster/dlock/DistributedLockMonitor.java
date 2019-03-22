@@ -1,4 +1,4 @@
-package com.github.sisyphsu.common.cluster.lock;
+package com.github.sisyphsu.common.cluster.dlock;
 
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import com.google.common.collect.ArrayListMultimap;
