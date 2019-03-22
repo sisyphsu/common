@@ -16,9 +16,10 @@ import org.springframework.stereotype.Component;
 public class ClusterIDProperties {
 
     /**
-     * ID限制, 即最大值or最大数量
+     * ID比特位限制, 用于限制最大值or最大数量
+     * 8->256
      */
-    private int max = 255;
+    private int bits = 5;
     /**
      * ID锁路径
      */

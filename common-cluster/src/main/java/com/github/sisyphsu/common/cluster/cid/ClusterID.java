@@ -85,6 +85,15 @@ public class ClusterID extends Thread {
         return this.nodeID;
     }
 
+    /**
+     * 获取集群ID比特位数
+     *
+     * @return 比特位
+     */
+    public int getBits() {
+        return this.props.getBits();
+    }
+
     @Override
     public void run() {
         ConnectionStateListener listener = (client, newState) -> {
@@ -139,9 +148,10 @@ public class ClusterID extends Thread {
     private Integer allocateNodeID() throws Exception {
         List<ClusterIDNode> nodes = this.listNodes();
         Integer nodeID = null;
-        if (nodes.size() < props.getMax()) {
+        int maxID = 2 << props.getBits();
+        if (nodes.size() < maxID) {
             Set<Integer> nodeIds = nodes.stream().map(ClusterIDNode::getId).collect(Collectors.toSet());
-            for (int i = 0; i < props.getMax(); i++) {
+            for (int i = 0; i < maxID; i++) {
                 if (!nodeIds.contains(i)) {
                     nodeID = i; // 干净的新ID
                     break;
