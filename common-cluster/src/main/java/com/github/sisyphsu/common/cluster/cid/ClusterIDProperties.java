@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 集群配置
+ * ClusterID's configuration
  *
  * @author sulin
  * @since 2019-03-22 12:00:18
@@ -16,12 +16,11 @@ import org.springframework.stereotype.Component;
 public class ClusterIDProperties {
 
     /**
-     * ID比特位限制, 用于限制最大值or最大数量, 默认为8比特
-     * 8->256
+     * id's bit count, used for min and max value limit, default 8 (1<<8=256).
      */
     private int bitNum = 8;
     /**
-     * ID锁路径
+     * the lock path in zookeeper
      */
     private String path = "/cluster-cid";
 

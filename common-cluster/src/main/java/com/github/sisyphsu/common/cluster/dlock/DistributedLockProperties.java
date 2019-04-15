@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 分布式锁配置
+ * DistributedLock's configuration
  *
  * @author sulin
  * @since 2019-03-22 10:42:57
@@ -16,19 +16,19 @@ import org.springframework.stereotype.Component;
 public class DistributedLockProperties {
 
     /**
-     * 并发锁有效期, 默认5秒
+     * The lock's expire time (second), default 5.
      */
     private int expireSecond = 5;
     /**
-     * 并发锁刷新间隔, 默认1秒
+     * The lock's flush interval (second), default 1
      */
     private int flushIntervalSecond = 1;
     /**
-     * 并发锁统一前缀
+     * The lock's prefix, which will be used as redis prefix
      */
     private String prefix = "dlock:";
     /**
-     * 并发锁消息通道
+     * The lock's synchronization channel.
      */
     private String channel = "#dlock:sync";
 

@@ -16,8 +16,8 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
 
 /**
- * 监视分布式锁的释放和丢失.
- * 单独启动线程监听Redis锁释放的消息, 并支持锁释放的订阅
+ * Monitor the distributed lock's release.
+ * Will start an redis subscriber to listen unlock notification.
  *
  * @author sulin
  * @since 2018-11-05 11:37:01
@@ -38,7 +38,7 @@ public class DistributedLockMonitor {
     }
 
     /**
-     * 启动unlock订阅
+     * start unlock notification's subscriber
      */
     private void startSubscribe() {
         RedisConnection connection = supplier.get();
@@ -46,20 +46,20 @@ public class DistributedLockMonitor {
             ScheduleUtils.runEvery(1000, this::startSubscribe);
             return;
         }
-        log.info("启动监听器");
+        log.info("start unlock notification's subscriber");
         connection.subscribe(this::onMessage, this.channel.getBytes());
     }
 
     /**
-     * 发送keys并发锁释放的消息
+     * Send the specified key's unlock notification.
      *
-     * @param keys 释放锁的KEYS
+     * @param keys the keys was unlocked
      */
     public void publishUnlock(Collection<String> keys) {
-        this.notifyUnlock(keys); // 给当前节点开私灶
+        this.notifyUnlock(keys); // Give the current JVM a small stove
         RedisConnection connection = supplier.get();
         if (connection == null) {
-            log.warn("获取redis连接失败, 放弃广播");
+            log.warn("get redis connection failed, will not publish unlock notification.");
             return;
         }
         try {
@@ -70,17 +70,17 @@ public class DistributedLockMonitor {
     }
 
     /**
-     * 如果当前处于风险状态则阻塞直至风险恢复
+     * Check if the redis server was failed, block until it recover.
      */
     public void blockIfRisk() {
-        // 暂不支持此功能
+        // unsupported
     }
 
     /**
-     * 添加指定KEY的锁释放的回调函数
+     * Add specified key's unlock semaphore.
      *
-     * @param keys KEY名称
-     * @param sema 回调函数
+     * @param keys key name
+     * @param sema semaphore
      */
     public void addListener(Collection<String> keys, Semaphore sema) {
         synchronized (this.semaphoneMap) {
@@ -91,35 +91,35 @@ public class DistributedLockMonitor {
     }
 
     /**
-     * 删除指定KEY的锁释放回调函数
+     * Delete specified key's semaphore
      *
-     * @param keys KEY名称
-     * @param sema 回调函数
+     * @param keys key name
+     * @param sema semaphore
      */
     public void delListener(Collection<String> keys, Semaphore sema) {
         synchronized (semaphoneMap) {
             for (String key : keys) {
                 if (!semaphoneMap.remove(key, sema)) {
-                    log.warn("删除unlock监听器失败: {}", key);
+                    log.warn("delete unlock semaphore failed: {}", key);
                 }
             }
         }
     }
 
-    // SUB消息回调函数
+    // redis's sub callback
     private void onMessage(Message msg, byte[] pattern) {
         String data = new String(msg.getBody());
-        log.trace("监听到unlock消息: {}", data);
+        log.trace("receive dlock's unlock notification: {}", data);
         List<String> keys = null;
         try {
             keys = Arrays.asList(data.split(KEY_SEPARATOR));
         } catch (Exception e) {
-            log.warn("解析unlock消息失败: {}", data);
+            log.warn("parse unlock message failed: {}", data);
         }
         this.notifyUnlock(keys);
     }
 
-    // 通知有一批KEY被解锁了
+    // notify that some key was unlocked by their owners.
     private void notifyUnlock(Collection<String> keys) {
         if (CollectionUtils.isEmpty(keys)) {
             return;

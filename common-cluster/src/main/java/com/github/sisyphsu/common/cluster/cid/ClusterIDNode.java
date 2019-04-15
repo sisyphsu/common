@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * 节点模型
+ * the zookeeper lock model
  *
  * @author sulin
  * @since 2019-03-22 12:13:00
@@ -14,15 +14,15 @@ import lombok.Data;
 public class ClusterIDNode {
 
     /**
-     * 节点的集群ID
+     * ClusterID's value
      */
     private int id;
     /**
-     * 时间戳
+     * ClusterID's last active time
      */
     private long timestamp;
     /**
-     * 是否锁定
+     * Whether locked or not
      */
     private boolean locked;
 

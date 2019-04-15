@@ -31,10 +31,10 @@ public class ScheduleUtils {
     }
 
     /**
-     * 每个若干毫秒执行一次指定函数
+     * Run specified function every `ms` milliseconds.
      *
-     * @param ms   执行间隔
-     * @param exec 执行函数
+     * @param ms   interval
+     * @param exec execute body
      * @return Future
      */
     public static Future runEvery(int ms, Runnable exec) {
@@ -48,10 +48,10 @@ public class ScheduleUtils {
     }
 
     /**
-     * 稍后执行指定函数
+     * Run specified function after `ms` milliseconds.
      *
-     * @param ms   延迟时间(毫秒)
-     * @param exec 执行函数
+     * @param ms   delay time
+     * @param exec execute body
      * @return Future
      */
     public static Future runAfter(int ms, Runnable exec) {
@@ -65,9 +65,9 @@ public class ScheduleUtils {
     }
 
     /**
-     * 启动独立的线程循环执行exec, 直至撤销
+     * Run specified function infinity until it was cancelled.
      *
-     * @param exec 执行单元
+     * @param exec execute body
      * @return Future
      */
     public static Future runInfinity(Runnable exec) {
@@ -75,10 +75,10 @@ public class ScheduleUtils {
     }
 
     /**
-     * 启动独立的线程以固定的时间间隔循环执行exec, 直至撤销
+     * Run specified function infinity until it was cancelled.
      *
-     * @param exec     执行单元
-     * @param interval 执行间隔
+     * @param exec     execute body
+     * @param interval interval milliseconds
      * @return Future
      */
     public static Future runInfinity(Runnable exec, long interval) {
@@ -100,9 +100,9 @@ public class ScheduleUtils {
     }
 
     /**
-     * 让当前线程睡眠一段时间, 并忽略InterruptedException
+     * Sleep `ms` milliseconds seliently, and swallow InterruptedException.
      *
-     * @param ms 睡眠时间
+     * @param ms sleep milliseconds
      */
     public static void sleep(long ms) {
         try {
@@ -112,9 +112,9 @@ public class ScheduleUtils {
     }
 
     /**
-     * 安静地执行某些客户忽略异常的方法
+     * Run specified function seliently
      *
-     * @param run 待执行方法
+     * @param run execute body
      */
     public static void runSeliently(RunnableWithException run) {
         try {

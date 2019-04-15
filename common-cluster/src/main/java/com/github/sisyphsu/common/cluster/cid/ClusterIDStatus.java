@@ -1,7 +1,7 @@
 package com.github.sisyphsu.common.cluster.cid;
 
 /**
- * 集群ID状态
+ * ClusterID's status
  *
  * @author sulin
  * @since 2019-03-22 12:11:37

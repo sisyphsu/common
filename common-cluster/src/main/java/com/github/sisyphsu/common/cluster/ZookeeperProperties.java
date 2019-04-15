@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * ZK配置
+ * ZooKeeper's configuration.
  *
  * @author sulin
  * @since 2019-03-22 12:08:22
@@ -18,37 +18,34 @@ import java.util.List;
 public class ZookeeperProperties {
 
     /**
-     * ZK服务地址
+     * ZK's server address
      */
     private String addr;
     /**
-     * ZK命名空间
+     * ZK's default namespace
      */
     private String namespace;
     /**
-     * 失败重试次数
+     * ZK RetryPolicy's times
      */
     private int retryTimes = 5;
     /**
-     * 失败重试时间间隔
+     * ZK RetryPolicy's interval (milliseconds)
      */
     private int retryInterval = 2000;
     /**
-     * 连接超时时间
+     * Connection's timeout milliseconds.
      */
     private int connectionTimeoutMs = 3000;
     /**
-     * 会话超时时间
+     * ZK session's timeout milliseconds.
      */
     private int sessionTimeoutMs = 5000;
     /**
-     * 认证信息
+     * ZK's authorization information.
      */
     private List<AuthInfo> authInfos;
 
-    /**
-     * 认证信息
-     */
     @Data
     public static class AuthInfo {
         private String scheme;

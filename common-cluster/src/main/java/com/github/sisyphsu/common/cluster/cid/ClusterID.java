@@ -1,7 +1,7 @@
 package com.github.sisyphsu.common.cluster.cid;
 
 /**
- * 集群ID抽象接口
+ * ClusterID specification.
  *
  * @author sulin
  * @since 2019-04-15 13:45:11
@@ -9,23 +9,24 @@ package com.github.sisyphsu.common.cluster.cid;
 public interface ClusterID {
 
     /**
-     * 获取当前节点在集群中的唯一ID
+     * Get the unique ID of the current node in the cluster.
+     * Will block if not ready.
      *
-     * @return 集群ID
+     * @return clusterID value
      */
     int get();
 
     /**
-     * 获取集群ID比特位数
+     * get the current ClusterID's bit count
      *
-     * @return 比特位
+     * @return bit count
      */
     int getBitNum();
 
     /**
-     * 获取当前集群ID的状态
+     * get the current ClusterID's status
      *
-     * @return 状态
+     * @return status
      */
     ClusterIDStatus getStatus();
 

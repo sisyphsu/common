@@ -5,6 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
+ * TickID's configuration.
+ *
  * @author sulin
  * @since 2019-04-15 20:20:47
  */
@@ -12,4 +14,14 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "spring.tick")
 public class TickProperties {
+
+    /**
+     * the size of every bucket of tick.
+     */
+    private int batchSize = 96;
+    /**
+     * the prefix of zk/redis key.
+     */
+    private String prefix = "tick";
+
 }

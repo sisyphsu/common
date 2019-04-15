@@ -25,7 +25,7 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
 
 /**
- * 基于Redis实现的分布式锁
+ * The distributed lock based on redis.
  *
  * @author sulin
  * @since 2018-11-05 12:08:10
@@ -40,15 +40,15 @@ public class DistributedLock {
     private DistributedLockProperties props;
 
     /**
-     * 分布式锁监听器
+     * unlock monitor
      */
     private DistributedLockMonitor monitor;
     /**
-     * 当前已锁定的KEY
+     * all lock hold by this instance.
      */
     private Set<String> lockedKeys = new ConcurrentSkipListSet<>();
     /**
-     * 占用锁的lua脚本
+     * dlock's lua script
      */
     private RedisScript<String> acquireScript;
 
@@ -78,11 +78,11 @@ public class DistributedLock {
     }
 
     /**
-     * 在并发锁内部执行业务逻辑
+     * Run the specified function in distributed lock.
      *
-     * @param keys 需锁定的KEY
-     * @param run  业务执行逻辑
-     * @throws Exception 执行失败
+     * @param keys the keys need to be lock.
+     * @param run  execute body
+     * @throws Exception dlock fail or biz error
      */
     public void runInLock(List<String> keys, Runnable run) throws Exception {
         this.runInLock(keys, () -> {
@@ -92,17 +92,17 @@ public class DistributedLock {
     }
 
     /**
-     * 在并发锁内部执行业务逻辑
+     * Run the specified function in distributed lock.
      *
-     * @param keys 需锁定的KEY
-     * @param run  业务单元
-     * @param <T>  返回类型
-     * @return 返回数据
-     * @throws Exception 并发锁异常or业务异常
+     * @param keys the keys need to be lock.
+     * @param run  execute body
+     * @param <T>  generic type
+     * @return result
+     * @throws Exception dlock fail or biz error
      */
     public <T> T runInLock(List<String> keys, Supplier<T> run) throws Exception {
         if (!this.lock(keys, 3000)) {
-            throw new InterruptedException("竞争并发锁失败");
+            throw new InterruptedException("DLock competition failed");
         }
         try {
             return run.get();
@@ -112,11 +112,11 @@ public class DistributedLock {
     }
 
     /**
-     * 锁定指定KEY, 如果不成功则阻塞等待一段时间
+     * Try lock the specified keys, block for a while if not success.
      *
-     * @param keys      需锁定的KEY
-     * @param timeoutMS 超时时间
-     * @return 释放成功
+     * @param keys      the keys need to be locked
+     * @param timeoutMS block time
+     * @return whether success or not
      */
     public boolean lock(List<String> keys, int timeoutMS) {
         long futureTime = System.currentTimeMillis() + timeoutMS;
@@ -126,7 +126,7 @@ public class DistributedLock {
             if (hasLock || System.currentTimeMillis() >= futureTime) {
                 break;
             }
-            log.trace("分布式锁竞争失败, 进入等待: {}", keys);
+            log.trace("dlock competition fails, enters waiting: {}", keys);
             Semaphore sema = new Semaphore(0);
             monitor.addListener(keys, sema);
             ScheduleUtils.runAfter(timeoutMS, sema::release);
@@ -134,16 +134,16 @@ public class DistributedLock {
             monitor.delListener(keys, sema);
         }
         if (hasLock) {
-            this.lockedKeys.addAll(keys); // 记录抢到的锁
+            this.lockedKeys.addAll(keys); // record the lock
         }
         return hasLock;
     }
 
     /**
-     * 尝试锁定指定KEYS
+     * Try lock the specified keys
      *
-     * @param keys 待锁定的KEYS
-     * @return 是否成功
+     * @param keys the keys need to be locked
+     * @return whether success or not
      */
     public boolean tryLock(List<String> keys) {
         monitor.blockIfRisk();
@@ -159,31 +159,31 @@ public class DistributedLock {
             return true;
         }
         if (StringUtils.isNotEmpty(result)) {
-            log.warn("tryLock异常: {}", result);
+            log.warn("tryLock failed: {}", result);
         }
         return false;
     }
 
     /**
-     * 尝试释放锁, 内部直接强制删除锁
-     * 不需要进行容错处理, 即便内部异常导致释放失败, 锁也会自动过期失效
+     * Try unlock, will delete the key directly.
+     * No fault-tolerant processing is required, and even if the internal exception
+     * causes the release to fail, the lock will automatically expire.
      *
-     * @param keys 待释放的锁
+     * @param keys the keys to unlock
      */
     public void unlock(List<String> keys) {
         this.lockedKeys.removeAll(keys);
-        // 删除锁
+        // delete the lock
         template.delete(wrapKeys(keys));
-        // 发送消息
+        // notify other waiter
         monitor.publishUnlock(keys);
     }
 
-    // 定时刷新全部已占用的锁在Redis中的失效时间
     private void flushAllLock() {
         if (lockedKeys.isEmpty()) {
             return;
         }
-        log.trace("刷新分布式锁失效时间: {}", lockedKeys);
+        log.trace("flush dlock's expired time: {}", lockedKeys);
         template.executePipelined((RedisCallback<Object>) connection -> {
             for (String key : wrapKeys(lockedKeys)) {
                 connection.expire(key.getBytes(), props.getExpireSecond());
@@ -192,14 +192,12 @@ public class DistributedLock {
         });
     }
 
-    // 封装Keys，添加统一的前缀
     private List<String> wrapKeys(Collection<String> keys) {
         List<String> result = new ArrayList<>();
         keys.forEach(key -> result.add(props.getPrefix() + key));
         return result;
     }
 
-    // 加载静态资源文件
     private String loadResource(String filename) {
         try (InputStream is = DistributedLock.class.getClassLoader().getResourceAsStream(filename)) {
             if (is == null) {

@@ -10,6 +10,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 /**
+ * TickID's operation wapper, which exposed in Spring's BeanFactory.
+ *
  * @author sulin
  * @since 2019-04-15 20:17:05
  */
@@ -17,7 +19,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TickTemplate {
 
-    private static final int TICK_BATCH_SIZE = 64;
+    @Autowired
+    private TickProperties tickProperties;
 
     @Autowired(required = false)
     private CuratorFramework curator;
@@ -32,7 +35,7 @@ public class TickTemplate {
      * @return new instance
      */
     public TickID createTickID(String tickName) {
-        return this.createTickID(tickName, TICK_BATCH_SIZE);
+        return this.createTickID(tickName, tickProperties.getBatchSize());
     }
 
     /**
@@ -63,7 +66,7 @@ public class TickTemplate {
         private String key;
 
         private RedisTickProvider(String tickName) {
-            this.key = String.format("tick:%s", tickName);
+            this.key = String.format("%s:%s", tickProperties.getPrefix(), tickName);
         }
 
         @Override
@@ -85,7 +88,7 @@ public class TickTemplate {
         private DistributedAtomicLong counter;
 
         private ZooKeeperTickProvider(String tickName) {
-            String path = String.format("/tick/%s", tickName);
+            String path = String.format("/%s/%s", tickProperties.getPrefix(), tickName);
             this.counter = new DistributedAtomicLong(curator, path, new RetryOneTime(1));
         }
 
