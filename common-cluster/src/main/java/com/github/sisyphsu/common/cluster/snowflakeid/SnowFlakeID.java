@@ -77,7 +77,7 @@ public class SnowFlakeID {
         if (clusterID == null) {
             throw new NullPointerException("clusterID must be not-null");
         }
-        if (timestampBitNum + sequenceBitNum + clusterID.getBits() > 63) {
+        if (timestampBitNum + sequenceBitNum + clusterID.getBitNum() > 63) {
             throw new IllegalArgumentException("SnowFlakeID's totalBitNum is bigger than 63");
         }
         this.clusterID = clusterID;
@@ -86,6 +86,15 @@ public class SnowFlakeID {
 
         this.timestampMax = 1 << timestampBitNum;
         this.sequenceMax = 1 << sequenceBitNum;
+    }
+
+    /**
+     * Fetch bit's count of final ID.
+     *
+     * @return bit's count, default 53
+     */
+    public int getBitNum() {
+        return this.timestampBitNum + this.sequenceBitNum + clusterID.getBitNum();
     }
 
     /**
@@ -107,7 +116,7 @@ public class SnowFlakeID {
             this.timestamp = nowTimestamp;
         }
         long prefix = (this.timestamp - BASE_TIMESTAMP) % this.timestampMax;
-        long result = prefix << clusterID.getBits() + cid;
+        long result = prefix << clusterID.getBitNum() + cid;
 
         return result << this.sequenceBitNum + this.sequence++;
     }

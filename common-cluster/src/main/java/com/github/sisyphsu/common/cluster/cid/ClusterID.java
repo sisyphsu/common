@@ -20,7 +20,7 @@ public interface ClusterID {
      *
      * @return 比特位
      */
-    int getBits();
+    int getBitNum();
 
     /**
      * 获取当前集群ID的状态

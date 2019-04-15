@@ -82,8 +82,8 @@ public class ClusterIDImpl extends Thread implements ClusterID {
     }
 
     @Override
-    public int getBits() {
-        return this.props.getBits();
+    public int getBitNum() {
+        return this.props.getBitNum();
     }
 
     @Override
@@ -145,7 +145,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
     private Integer allocateNodeID() throws Exception {
         List<ClusterIDNode> nodes = this.listNodes();
         Integer nodeID = null;
-        int maxID = 2 << props.getBits();
+        int maxID = 2 << props.getBitNum();
         if (nodes.size() < maxID) {
             Set<Integer> nodeIds = nodes.stream().map(ClusterIDNode::getId).collect(Collectors.toSet());
             for (int i = 0; i < maxID; i++) {

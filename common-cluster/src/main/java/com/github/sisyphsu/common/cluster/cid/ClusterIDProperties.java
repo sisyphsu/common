@@ -19,7 +19,7 @@ public class ClusterIDProperties {
      * ID比特位限制, 用于限制最大值or最大数量, 默认为8比特
      * 8->256
      */
-    private int bits = 8;
+    private int bitNum = 8;
     /**
      * ID锁路径
      */
