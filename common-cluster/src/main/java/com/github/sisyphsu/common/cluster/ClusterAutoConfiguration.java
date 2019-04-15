@@ -1,6 +1,7 @@
 package com.github.sisyphsu.common.cluster;
 
 import com.github.sisyphsu.common.cluster.cid.ClusterID;
+import com.github.sisyphsu.common.cluster.cid.ClusterIDImpl;
 import com.github.sisyphsu.common.cluster.cid.ClusterIDProperties;
 import com.github.sisyphsu.common.cluster.dlock.DistributedLock;
 import com.github.sisyphsu.common.cluster.dlock.DistributedLockProperties;
@@ -26,7 +27,7 @@ import java.util.Base64;
 import java.util.List;
 
 /**
- * 启动初始化
+ * Execute auto configure for CuratorFramework, ClusterID, DistributedLock
  *
  * @author sulin
  * @since 2019-03-22 12:08:05
@@ -60,7 +61,7 @@ public class ClusterAutoConfiguration {
             }
             builder.authorization(authInfoList);
         }
-        // 执行构建
+        // build && start
         CuratorFramework cf = builder.build();
         cf.start();
         return cf;
@@ -71,7 +72,7 @@ public class ClusterAutoConfiguration {
     @ConditionalOnBean(CuratorFramework.class)
     @ConditionalOnMissingBean(ClusterID.class)
     public ClusterID clusterID(CuratorFramework framework, ClusterIDProperties props) {
-        return new ClusterID(framework, props);
+        return new ClusterIDImpl(framework, props);
     }
 
     @Bean

@@ -1,81 +1,115 @@
 package com.github.sisyphsu.common.cluster.snowflakeid;
 
 
-import com.github.sisyphsu.common.cluster.cid.ClusterIDImpl;
+import com.github.sisyphsu.common.cluster.cid.ClusterID;
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 
 /**
- * 序号ID生成器
+ * Used for generating SnowFlakeID, which based on ClusterID
  *
  * @author sulin
  * @since 2019-03-22 20:40:10
  */
 public class SnowFlakeID {
 
+    // 2016-01-01 00:00:00 GMT+0800
+    private static final long BASE_TIMESTAMP = 1454256000000L;
+
+    private static final int TIMESTAMP_BIT_NUM = 39;
     private static final int DEFAULT_SEQUENCE_BIT_NUM = 6;
-    private static final long BASE_TIMESTAMP = 1400000000000L;
 
     /**
-     * 集群ID
+     * Provided by outside
      */
-    private ClusterIDImpl clusterID;
+    private ClusterID clusterID;
     /**
-     * 当前时间戳
+     * Last time that call generate
      */
     private long timestamp;
     /**
-     * 递增序号的bit位数量, 即每毫秒取若干个递增bit
+     * The bit count of timestamp prefix.
+     */
+    private int timestampBitNum;
+    /**
+     * The max value of timestamp prefix
+     */
+    private long timestampMax;
+    /**
+     * The sequence number in current millisecond
+     */
+    private int sequence;
+    /**
+     * The bit count of sequence, which limit the max sequence number.
      */
     private int sequenceBitNum;
     /**
-     * 当前已使用序号
+     * The max value of sequence
      */
-    private int sequence;
+    private int sequenceMax;
 
     /**
-     * 初始化SnowFlakeID实例
+     * Initialize SnowFlakeID
      *
-     * @param clusterID 集群ID实例
+     * @param clusterID The instance of ClusterID
      */
-    public SnowFlakeID(ClusterIDImpl clusterID) {
+    public SnowFlakeID(ClusterID clusterID) {
         this(clusterID, DEFAULT_SEQUENCE_BIT_NUM);
     }
 
     /**
-     * 初始化SnowFlakeID实例
+     * Initialize SnowFlakeID
      *
-     * @param clusterID      集群ID实例
-     * @param sequenceBitNum 后缀递增序号字节数
+     * @param clusterID      The instance of ClusterID
+     * @param sequenceBitNum The bit count of sequence
      */
-    public SnowFlakeID(ClusterIDImpl clusterID, int sequenceBitNum) {
-        this.clusterID = clusterID;
-        this.sequenceBitNum = sequenceBitNum;
+    public SnowFlakeID(ClusterID clusterID, int sequenceBitNum) {
+        this(clusterID, TIMESTAMP_BIT_NUM, sequenceBitNum);
     }
 
     /**
-     * 生成一个新的ID
+     * Initialize SnowFlakeID
      *
-     * @return 新ID
+     * @param clusterID       The instance of ClusterID
+     * @param timestampBitNum The bit count of timestamp prefix
+     * @param sequenceBitNum  The bit count of sequence
      */
-    public synchronized long generate() {
-        long currTime = System.currentTimeMillis();
-        long nodeID = clusterID.get();
-        int maxSequence = 2 << this.sequenceBitNum;
-        while (currTime == this.timestamp && this.sequence >= maxSequence) {
-            ScheduleUtils.sleep(0); // 当前毫秒已耗尽, 等待下个毫秒
-            currTime = System.currentTimeMillis();
+    public SnowFlakeID(ClusterID clusterID, int timestampBitNum, int sequenceBitNum) {
+        if (clusterID == null) {
+            throw new NullPointerException("clusterID must be not-null");
         }
-        if (currTime != this.timestamp) {
-            this.sequence = 0;
-            this.timestamp = currTime;
+        if (timestampBitNum + sequenceBitNum + clusterID.getBits() > 63) {
+            throw new IllegalArgumentException("SnowFlakeID's totalBitNum is bigger than 63");
         }
-        long suffix = nodeID << this.sequenceBitNum + this.sequence++;
-        long prefix = this.generatePrefix(currTime) << (this.sequenceBitNum + clusterID.getBits());
-        return prefix + suffix;
+        this.clusterID = clusterID;
+        this.timestampBitNum = timestampBitNum;
+        this.sequenceBitNum = sequenceBitNum;
+
+        this.timestampMax = 1 << timestampBitNum;
+        this.sequenceMax = 1 << sequenceBitNum;
     }
 
-    protected long generatePrefix(long timestamp) {
-        return timestamp - BASE_TIMESTAMP;
+    /**
+     * Generate next ID
+     *
+     * @return new ID
+     */
+    public synchronized long generate() {
+        long nowTimestamp = System.currentTimeMillis();
+        long cid = clusterID.get();
+        // try sleep for next millisecond if sequence was dried-up
+        while (this.timestamp == nowTimestamp && this.sequence >= this.sequenceMax) {
+            ScheduleUtils.sleep(0);
+            nowTimestamp = System.currentTimeMillis();
+        }
+        // reset sequence if millisecond changed
+        if (nowTimestamp != this.timestamp) {
+            this.sequence = 0;
+            this.timestamp = nowTimestamp;
+        }
+        long prefix = (this.timestamp - BASE_TIMESTAMP) % this.timestampMax;
+        long result = prefix << clusterID.getBits() + cid;
+
+        return result << this.sequenceBitNum + this.sequence++;
     }
 
 }

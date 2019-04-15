@@ -18,8 +18,9 @@ import java.util.function.Supplier;
 /**
  * 监视分布式锁的释放和丢失.
  * 单独启动线程监听Redis锁释放的消息, 并支持锁释放的订阅
- * <p>
- * created by sulin at 2018-11-05 11:37:01
+ *
+ * @author sulin
+ * @since 2018-11-05 11:37:01
  */
 @Slf4j
 public class DistributedLockMonitor {

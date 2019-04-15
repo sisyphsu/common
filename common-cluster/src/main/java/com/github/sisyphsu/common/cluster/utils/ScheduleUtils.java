@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
- * 调度工具类
+ * Wrap some util methods for Thread schedule.
  *
  * @author sulin
  * @since 2019-03-22 10:19:54

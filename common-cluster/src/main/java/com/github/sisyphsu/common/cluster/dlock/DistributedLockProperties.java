@@ -26,10 +26,10 @@ public class DistributedLockProperties {
     /**
      * 并发锁统一前缀
      */
-    private String prefix = "dlock_";
+    private String prefix = "dlock:";
     /**
      * 并发锁消息通道
      */
-    private String channel = "#dlock_sync";
+    private String channel = "#dlock:sync";
 
 }

@@ -25,9 +25,10 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
 
 /**
- * Redis操作封装, 它需要使用Jedis直接连接Redis, 再Redis宕机时需要能够感知到。
- * <p>
- * created by sulin at 2018-11-05 12:08:10
+ * 基于Redis实现的分布式锁
+ *
+ * @author sulin
+ * @since 2018-11-05 12:08:10
  */
 @Slf4j
 public class DistributedLock {
