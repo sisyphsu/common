@@ -1,7 +1,7 @@
-package com.github.sisyphsu.common.cluster.cid.generator;
+package com.github.sisyphsu.common.cluster.snowflakeid;
 
 
-import com.github.sisyphsu.common.cluster.cid.ClusterID;
+import com.github.sisyphsu.common.cluster.cid.ClusterIDImpl;
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 
 /**
@@ -10,14 +10,15 @@ import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
  * @author sulin
  * @since 2019-03-22 20:40:10
  */
-public class NormalIDGenerator {
+public class SnowFlakeID {
 
-    private static final Long BASE_TIMESTAMP = 1400000000000L;
+    private static final int DEFAULT_SEQUENCE_BIT_NUM = 6;
+    private static final long BASE_TIMESTAMP = 1400000000000L;
 
     /**
      * 集群ID
      */
-    private ClusterID clusterID;
+    private ClusterIDImpl clusterID;
     /**
      * 当前时间戳
      */
@@ -31,7 +32,22 @@ public class NormalIDGenerator {
      */
     private int sequence;
 
-    public NormalIDGenerator(ClusterID clusterID, int sequenceBitNum) {
+    /**
+     * 初始化SnowFlakeID实例
+     *
+     * @param clusterID 集群ID实例
+     */
+    public SnowFlakeID(ClusterIDImpl clusterID) {
+        this(clusterID, DEFAULT_SEQUENCE_BIT_NUM);
+    }
+
+    /**
+     * 初始化SnowFlakeID实例
+     *
+     * @param clusterID      集群ID实例
+     * @param sequenceBitNum 后缀递增序号字节数
+     */
+    public SnowFlakeID(ClusterIDImpl clusterID, int sequenceBitNum) {
         this.clusterID = clusterID;
         this.sequenceBitNum = sequenceBitNum;
     }
