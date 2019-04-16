@@ -1,13 +1,9 @@
 package com.github.sisyphsu.common.cluster.tickid;
 
-import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Wrap tickID's allocation
@@ -16,7 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @since 2019-04-15 15:43:44
  */
 @Slf4j
-public class TickID {
+public class TickID extends Thread {
 
     /**
      * batch size of pool.
@@ -27,11 +23,9 @@ public class TickID {
      */
     private final TickProvider provider;
 
-    private boolean loading;
-    private ReadWriteLock lock;
-    private Condition cond;
-    private TickPool currPool;
-    private TickPool nextPool;
+    private boolean closed;
+    private TickPool pool;
+    private Semaphore semaphore;
 
     /**
      * Initialize
@@ -42,10 +36,11 @@ public class TickID {
     public TickID(TickProvider provider, int batch) {
         this.batch = batch;
         this.provider = provider;
-        this.lock = new ReentrantReadWriteLock();
-        this.cond = this.lock.readLock().newCondition();
+        this.semaphore = new Semaphore(1);
 
-        this.checkLoad();
+        this.setDaemon(true);
+        this.setName("TickID-" + provider.name());
+        this.start();
     }
 
     /**
@@ -69,75 +64,74 @@ public class TickID {
      */
     public long generate(long timeout) throws TimeoutException {
         long endTime = System.currentTimeMillis() + timeout;
-        while (true) {
-            long waitTime = System.currentTimeMillis() - endTime;
+        Long result = null;
+        while (result == null) {
+            long waitTime = endTime - System.currentTimeMillis();
             if (waitTime <= 0) {
                 throw new TimeoutException("generate tickID timeout"); // timeout
             }
-            lock.readLock().lock();
-            try {
-                Long result = this.tryFetchTick();
-                this.checkLoad();
-                if (result != null) {
-                    return result; // success
+            synchronized (this) {
+                try {
+                    if (pool != null && !pool.isDrain()) {
+                        result = pool.takeTickID();
+                    } else {
+                        pool = null;
+                    }
+                    if (pool == null && semaphore.availablePermits() == 0) {
+                        semaphore.release(); // active loader thread
+                    }
+                    if (result == null) {
+                        this.wait(waitTime);
+                    }
+                } catch (Exception e) {
+                    log.warn("Error happens when generate new tickID. ", e);
                 }
-                cond.await(waitTime, TimeUnit.MILLISECONDS);
-            } catch (Exception e) {
-                log.warn("Error happens when generate new tickID. ", e);
             }
-            lock.readLock().unlock();
+        }
+        return result;
+    }
+
+    @Override
+    public void run() {
+        TickPool nextPool = null;
+        while (!closed) {
+            // prepare new bucket of tick
+            if (nextPool == null) {
+                try {
+                    long max = provider.acquireTick(batch);
+                    long min = max - batch;
+                    nextPool = new TickPool(min, max);
+                } catch (Exception e) {
+                    log.error("load tick error", e);
+                }
+            }
+            // update pool in lock if need
+            synchronized (this) {
+                if (nextPool != null && this.pool == null) {
+                    this.pool = nextPool;
+                    nextPool = null;
+                }
+                this.notifyAll();
+            }
+            // wait next semaphore
+            if (nextPool != null && this.pool != null) {
+                try {
+                    semaphore.acquire(1);
+                } catch (InterruptedException ignored) {
+                }
+            }
         }
     }
 
-    // try allocate an new tickID
-    private Long tryFetchTick() {
-        if ((currPool == null || currPool.isDrain()) && nextPool != null) {
-            currPool = nextPool;
-            nextPool = null;
-        }
-        if (currPool != null && !currPool.isDrain()) {
-            return currPool.takeTickID();
-        }
-        return null;
-    }
-
-    // check whether need load next batch tickID or not
-    private void checkLoad() {
-        if (this.loading) {
+    /**
+     * close current TickID instance
+     */
+    public synchronized void close() {
+        if (this.closed) {
             return;
         }
-        if (this.currPool != null && this.nextPool != null) {
-            return;
-        }
-        this.loading = true;
-        ScheduleUtils.runAfter(0, this::execLoad);
-    }
-
-    // load tick asynchorized
-    private void execLoad() {
-        TickPool pool = null;
-        try {
-            long max = provider.acquireTick(batch);
-            long min = max - batch;
-            pool = new TickPool(min, max);
-        } catch (Exception e) {
-            log.error("load tick error", e);
-        }
-        // update pool in write-lock
-        lock.writeLock().lock();
-        try {
-            if (pool != null) {
-                if (this.currPool == null) {
-                    this.currPool = pool;
-                } else {
-                    this.nextPool = pool;
-                }
-                this.cond.signalAll();
-            }
-        } finally {
-            lock.writeLock().unlock();
-            loading = false;
-        }
+        this.closed = true;
+        this.interrupt();
     }
 
 }

@@ -6,8 +6,14 @@ package com.github.sisyphsu.common.cluster.tickid;
  * @author sulin
  * @since 2019-04-15 15:47:07
  */
-@FunctionalInterface
 public interface TickProvider {
+
+    /**
+     * TickID's group name
+     *
+     * @return name
+     */
+    String name();
 
     /**
      * Acquire some tick with specified count. Implementation should like:

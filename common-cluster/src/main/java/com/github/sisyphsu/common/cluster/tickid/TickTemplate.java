@@ -63,10 +63,17 @@ public class TickTemplate {
      */
     private class RedisTickProvider implements TickProvider {
 
+        private String tickName;
         private String key;
 
         private RedisTickProvider(String tickName) {
+            this.tickName = tickName;
             this.key = String.format("%s:%s", tickProperties.getPrefix(), tickName);
+        }
+
+        @Override
+        public String name() {
+            return tickName;
         }
 
         @Override
@@ -85,11 +92,18 @@ public class TickTemplate {
      */
     private class ZooKeeperTickProvider implements TickProvider {
 
+        private String tickName;
         private DistributedAtomicLong counter;
 
         private ZooKeeperTickProvider(String tickName) {
             String path = String.format("/%s/%s", tickProperties.getPrefix(), tickName);
+            this.tickName = tickName;
             this.counter = new DistributedAtomicLong(curator, path, new RetryOneTime(1));
+        }
+
+        @Override
+        public String name() {
+            return tickName;
         }
 
         @Override
