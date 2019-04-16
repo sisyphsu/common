@@ -12,8 +12,8 @@ import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
  */
 public class SnowFlakeID {
 
-    // 2016-01-01 00:00:00 GMT+0800
-    private static final long BASE_TIMESTAMP = 1454256000000L;
+    // 2017-01-01 00:00:00 GMT+0800
+    private static final long BASE_TIMESTAMP = 1483200000000L;
 
     private static final int TIMESTAMP_BIT_NUM = 39;
     private static final int DEFAULT_SEQUENCE_BIT_NUM = 6;
@@ -21,31 +21,31 @@ public class SnowFlakeID {
     /**
      * Provided by outside
      */
-    private ClusterID clusterID;
+    private final ClusterID clusterID;
+    /**
+     * The bit count of timestamp prefix.
+     */
+    private final int timestampBitNum;
+    /**
+     * The max value of timestamp prefix
+     */
+    private final long timestampMax;
+    /**
+     * The bit count of sequence, which limit the max sequence number.
+     */
+    private final int sequenceBitNum;
+    /**
+     * The max value of sequence
+     */
+    private final int sequenceMax;
     /**
      * Last time that call generate
      */
     private long timestamp;
     /**
-     * The bit count of timestamp prefix.
-     */
-    private int timestampBitNum;
-    /**
-     * The max value of timestamp prefix
-     */
-    private long timestampMax;
-    /**
      * The sequence number in current millisecond
      */
     private int sequence;
-    /**
-     * The bit count of sequence, which limit the max sequence number.
-     */
-    private int sequenceBitNum;
-    /**
-     * The max value of sequence
-     */
-    private int sequenceMax;
 
     /**
      * Initialize SnowFlakeID
@@ -84,7 +84,7 @@ public class SnowFlakeID {
         this.timestampBitNum = timestampBitNum;
         this.sequenceBitNum = sequenceBitNum;
 
-        this.timestampMax = 1 << timestampBitNum;
+        this.timestampMax = 1L << timestampBitNum;
         this.sequenceMax = 1 << sequenceBitNum;
     }
 
@@ -115,10 +115,11 @@ public class SnowFlakeID {
             this.sequence = 0;
             this.timestamp = nowTimestamp;
         }
+        // build id
         long prefix = (this.timestamp - BASE_TIMESTAMP) % this.timestampMax;
-        long result = prefix << clusterID.getBitNum() + cid;
+        long result = (prefix << clusterID.getBitNum()) + cid;
 
-        return result << this.sequenceBitNum + this.sequence++;
+        return (result << this.sequenceBitNum) + this.sequence++;
     }
 
 }
