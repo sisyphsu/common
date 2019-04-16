@@ -16,9 +16,9 @@ import org.springframework.stereotype.Component;
 public class TickProperties {
 
     /**
-     * the size of every bucket of tick.
+     * the default size of every bucket of tick.
      */
-    private int batchSize = 96;
+    private int defaultBatchSize = 96;
     /**
      * the prefix of zk/redis key.
      */

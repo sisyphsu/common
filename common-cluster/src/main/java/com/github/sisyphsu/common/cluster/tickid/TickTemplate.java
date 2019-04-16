@@ -35,7 +35,7 @@ public class TickTemplate {
      * @return new instance
      */
     public TickID createTickID(String tickName) {
-        return this.createTickID(tickName, tickProperties.getBatchSize());
+        return this.createTickID(tickName, tickProperties.getDefaultBatchSize());
     }
 
     /**

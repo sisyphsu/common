@@ -22,6 +22,6 @@ public class ClusterIDProperties {
     /**
      * the lock path in zookeeper
      */
-    private String path = "/cluster-cid";
+    private String path = "/clusterid";
 
 }

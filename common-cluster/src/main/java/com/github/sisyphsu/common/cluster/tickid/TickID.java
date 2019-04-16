@@ -55,7 +55,7 @@ public class TickID {
      */
     public long generate() {
         try {
-            return this.generate(Integer.MAX_VALUE);
+            return this.generate(Integer.MAX_VALUE); // wait...
         } catch (TimeoutException e) {
             throw new IllegalStateException("generate tickID failed");
         }

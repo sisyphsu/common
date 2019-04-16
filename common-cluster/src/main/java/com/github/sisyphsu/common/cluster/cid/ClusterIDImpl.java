@@ -10,6 +10,7 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.zookeeper.CreateMode;
+import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * 集群ID分配器, 通过ZK实现集群ID的分配, 但并不强依赖ZK的可靠性.
+ * ClusterID implementation.
+ * Based on zookeeper, provide clusterId's allocation and competition.
  *
  * @author sulin
  * @since 2019-03-22 12:08:36
@@ -31,40 +33,47 @@ public class ClusterIDImpl extends Thread implements ClusterID {
     private final ClusterIDProperties props;
 
     /**
-     * 集群ID分配状态
+     * ClusterID's status
      */
     private ClusterIDStatus status = ClusterIDStatus.NONE;
     /**
-     * 状态信号量
+     * Status's semaphore, will be released when status changed
      */
     private Semaphore statusSema = new Semaphore(0);
     /**
-     * 节点ID
+     * The current ClusterID value, -1 means invalid
      */
     private int nodeID = -1;
     /**
-     * 节点锁, 通过锁占用ID
+     * ZK's node lock, use it to occupy one specified id
      */
     private InterProcessMutex nodeLock;
     /**
-     * 是否已关闭
+     * Whether closed or not
      */
     private boolean closed = false;
 
     /**
-     * 初始化集群ID, 同步地占用一个ID
-     * 如果ID已全部被占用, 则抛出异常中断服务
+     * Initialize and start a daemon thread to occupy nodelock
      *
-     * @param curator ZK客户端框架
-     * @param props   集群ID配置
+     * @param curator ZK's curator instance
+     * @param props   ClusterID's configuration
      */
     public ClusterIDImpl(CuratorFramework curator, ClusterIDProperties props) {
+        Assert.notNull(curator, "curator can't be null");
+        Assert.notNull(props, "props can't be null");
+
         this.curator = curator;
         this.props = props;
 
         this.setDaemon(true);
-        this.setName("CLUSTER-ID");
+        this.setName("ClusterID");
         this.start();
+    }
+
+    @Override
+    public int getBitNum() {
+        return this.props.getBitNum();
     }
 
     @Override
@@ -79,11 +88,6 @@ public class ClusterIDImpl extends Thread implements ClusterID {
             throw new IllegalStateException("ClusterID is closed.");
         }
         return this.nodeID;
-    }
-
-    @Override
-    public int getBitNum() {
-        return this.props.getBitNum();
     }
 
     @Override
@@ -107,8 +111,8 @@ public class ClusterIDImpl extends Thread implements ClusterID {
                         if (nodeID == null) {
                             log.warn("No available nodeID for {}, retry later", props.getPath());
                         } else {
-                            this.flushTimestamp(nodeID); // 确定ID之前先刷新一次时间戳
-                            this.updateStatus(ClusterIDStatus.LOCK, nodeID); // 分配新ID
+                            this.flushTimestamp(nodeID); // flush timestamp before confirm nodeId
+                            this.updateStatus(ClusterIDStatus.LOCK, nodeID); // alloc new id
                         }
                     } catch (Exception e) {
                         log.error("Allocate ClusterID failed.", e);
@@ -121,18 +125,19 @@ public class ClusterIDImpl extends Thread implements ClusterID {
                     } catch (Exception e) {
                         log.error("flush node's time failed.", e);
                     }
-                    ScheduleUtils.sleep(30000);
+                    ScheduleUtils.sleep(20000);
                     break;
                 case UNLOCK:
                     try {
                         if (this.tryLockNode(nodeID)) {
-                            this.updateStatus(ClusterIDStatus.LOCK, nodeID); // ZK重连后继续锁定旧ID
+                            log.debug("relock the old nodeID[{}] after reconnection.", nodeID);
+                            this.updateStatus(ClusterIDStatus.LOCK, nodeID);
                         } else {
-                            log.warn("dlock old nodeID[{}] failed!!!", nodeID);
-                            this.updateStatus(ClusterIDStatus.NONE, -1); // 当前ID被抢占, 可能导致集群在过去一段时间内出现重复ID
+                            log.warn("relock the old nodeID[{}] failed! there will be some risks in the past.", nodeID);
+                            this.updateStatus(ClusterIDStatus.NONE, -1);
                         }
                     } catch (Exception e) {
-                        log.error("Relock node failed.", e);
+                        log.error("relock the old nodeID failed.", e);
                     }
                     ScheduleUtils.sleep(5000);
                     break;
@@ -141,7 +146,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
         this.curator.getConnectionStateListenable().removeListener(listener);
     }
 
-    // 分配一个新的可用ID
+    // allocate an new avaliable nodeID
     private Integer allocateNodeID() throws Exception {
         List<ClusterIDNode> nodes = this.listNodes();
         Integer nodeID = null;
@@ -150,7 +155,8 @@ public class ClusterIDImpl extends Thread implements ClusterID {
             Set<Integer> nodeIds = nodes.stream().map(ClusterIDNode::getId).collect(Collectors.toSet());
             for (int i = 0; i < maxID; i++) {
                 if (!nodeIds.contains(i)) {
-                    nodeID = i; // 干净的新ID
+                    log.debug("take over an new nodeID: {}", i);
+                    nodeID = i;
                     break;
                 }
             }
@@ -163,19 +169,20 @@ public class ClusterIDImpl extends Thread implements ClusterID {
             Long minTimestamp = nodes.stream().map(ClusterIDNode::getTimestamp).min(Long::compareTo).get();
             for (ClusterIDNode node : nodes) {
                 if (node.getTimestamp() == minTimestamp) {
-                    log.info("use old nodeID: {}", node.getId());
-                    nodeID = node.getId();// 旧ID被征用
+                    log.debug("take over an old nodeID: {}", node.getId());
+                    nodeID = node.getId();
                     break;
                 }
             }
         }
         if (nodeID != null && !tryLockNode(nodeID)) {
-            nodeID = null; // 占用失败
+            log.debug("lock the nodeID failed.");
+            nodeID = null;
         }
         return nodeID;
     }
 
-    // 尝试锁定指定节点ID
+    // try lock the specified nodeID
     private boolean tryLockNode(int nodeID) throws Exception {
         if (this.nodeLock != null) {
             try {
@@ -188,7 +195,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
         return this.nodeLock.acquire(1, TimeUnit.SECONDS);
     }
 
-    // 查询全部节点
+    // query all used nodeID, no matter it's locked or not.
     private List<ClusterIDNode> listNodes() throws Exception {
         if (curator.checkExists().forPath(props.getPath()) == null) {
             curator.create().creatingParentsIfNeeded().forPath(props.getPath());
@@ -209,7 +216,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
         return result;
     }
 
-    // 刷新当前节点时间戳
+    // flush the specified nodeID's timestamp
     private void flushTimestamp(int nodeID) throws Exception {
         String path = props.getPath() + "/" + nodeID;
         if (curator.getState() != CuratorFrameworkState.STARTED) {
@@ -221,7 +228,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
         curator.setData().forPath(path, String.valueOf(System.currentTimeMillis()).getBytes());
     }
 
-    // 更新状态
+    // update the current ClusterID's status
     private void updateStatus(ClusterIDStatus status, int nodeID) {
         log.warn("ClusterID changed: {}, {}", status, nodeID);
         this.nodeID = nodeID;
