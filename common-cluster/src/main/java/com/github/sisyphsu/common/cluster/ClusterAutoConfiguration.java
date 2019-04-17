@@ -80,10 +80,10 @@ public class ClusterAutoConfiguration {
 
     @Bean
     @Autowired
-    @ConditionalOnBean({ClusterID.class, StringRedisTemplate.class})
+    @ConditionalOnBean({StringRedisTemplate.class})
     @ConditionalOnMissingBean(DistributedLock.class)
-    public DistributedLock createDLock(ClusterID clusterID, StringRedisTemplate template, DistributedLockProperties props) {
-        return new DistributedLock(clusterID, template, props);
+    public DistributedLock createDLock(StringRedisTemplate template, DistributedLockProperties props) {
+        return new DistributedLock(template, props);
     }
 
 }

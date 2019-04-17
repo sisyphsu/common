@@ -1,6 +1,5 @@
 package com.github.sisyphsu.common.cluster.dlock;
 
-import com.github.sisyphsu.common.cluster.cid.ClusterID;
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +14,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -35,10 +31,13 @@ public class DistributedLock {
 
     private static final String ACQUIRE_FILE = "lua/dlock-acquire.lua";
 
-    private ClusterID clusterID;
     private StringRedisTemplate template;
     private DistributedLockProperties props;
 
+    /**
+     * lock token
+     */
+    private String token;
     /**
      * unlock monitor
      */
@@ -54,8 +53,8 @@ public class DistributedLock {
 
     private Future future;
 
-    public DistributedLock(ClusterID clusterID, StringRedisTemplate template, DistributedLockProperties props) {
-        this.clusterID = clusterID;
+    public DistributedLock(StringRedisTemplate template, DistributedLockProperties props) {
+        this.token = UUID.randomUUID().toString();
         this.template = template;
         this.props = props;
     }
@@ -152,7 +151,6 @@ public class DistributedLock {
                 return false;
             }
         }
-        String token = String.valueOf(clusterID.get());
         String expire = String.valueOf(props.getExpireSecond());
         String result = template.execute(this.acquireScript, wrapKeys(keys), token, expire);
         if (StringUtils.equalsIgnoreCase(result, "ok")) {
