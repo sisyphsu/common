@@ -16,10 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ import java.util.List;
 @Slf4j
 @ComponentScan
 @Configuration
+@Import({RedisAutoConfiguration.class})
 @EnableAutoConfiguration
 public class ClusterAutoConfiguration {
 
@@ -79,8 +82,8 @@ public class ClusterAutoConfiguration {
     @Autowired
     @ConditionalOnBean({ClusterID.class, StringRedisTemplate.class})
     @ConditionalOnMissingBean(DistributedLock.class)
-    public DistributedLock createDLock(DistributedLockProperties distributedLockProperties, ClusterID clusterID, StringRedisTemplate template) {
-        return new DistributedLock(clusterID, template, distributedLockProperties);
+    public DistributedLock createDLock(ClusterID clusterID, StringRedisTemplate template, DistributedLockProperties props) {
+        return new DistributedLock(clusterID, template, props);
     }
 
 }

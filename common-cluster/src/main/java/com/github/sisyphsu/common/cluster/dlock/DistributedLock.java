@@ -126,7 +126,7 @@ public class DistributedLock {
             if (hasLock || System.currentTimeMillis() >= futureTime) {
                 break;
             }
-            log.trace("dlock competition fails, enters waiting: {}", keys);
+            log.debug("dlock competition fails, enters waiting: {}", keys);
             Semaphore sema = new Semaphore(0);
             monitor.addListener(keys, sema);
             ScheduleUtils.runAfter(timeoutMS, sema::release);
