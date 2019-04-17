@@ -150,7 +150,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
     private Integer allocateNodeID() throws Exception {
         List<ClusterIDNode> nodes = this.listNodes();
         Integer nodeID = null;
-        int maxID = 2 << props.getBitNum();
+        int maxID = 1 << props.getBitNum();
         if (nodes.size() < maxID) {
             Set<Integer> nodeIds = nodes.stream().map(ClusterIDNode::getId).collect(Collectors.toSet());
             for (int i = 0; i < maxID; i++) {
@@ -161,7 +161,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
                 }
             }
         } else {
-            nodes.removeIf(ClusterIDNode::isLocked);
+            nodes.removeIf(node -> node.isLocked() || node.getId() >= maxID);
             if (nodes.isEmpty()) {
                 log.warn("no available nodeID");
                 return null;
@@ -230,7 +230,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
 
     // update the current ClusterID's status
     private void updateStatus(ClusterIDStatus status, int nodeID) {
-        log.warn("ClusterID changed: {}, {}", status, nodeID);
+        log.info("ClusterID changed: {}, {}", status, nodeID);
         this.nodeID = nodeID;
         this.status = status;
         this.statusSema.release();
