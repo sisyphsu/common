@@ -1,0 +1,8 @@
+spring:
+
+  zookeeper:
+    addr: localhost:2181
+
+  redis:
+    host: localhost
+    port: 6379
