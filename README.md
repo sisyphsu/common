@@ -1,6 +1,6 @@
 # common
 
-Some useful library for Java & SpringBootimplementation.
+Some useful library for Java & SpringBoot implementation.
 
 ## common-cluster
 
