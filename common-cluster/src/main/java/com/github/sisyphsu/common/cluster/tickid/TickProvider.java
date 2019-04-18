@@ -21,6 +21,7 @@ public interface TickProvider {
      *
      * @param count tick count
      * @return Final globalID after acquire
+     * @throws Exception any
      */
     long acquireTick(int count) throws Exception;
 

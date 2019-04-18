@@ -61,6 +61,7 @@ public class TickID extends Thread {
      *
      * @param timeout timeout milliseconds
      * @return new tickID
+     * @throws TimeoutException timeout
      */
     public long generate(long timeout) throws TimeoutException {
         long endTime = System.currentTimeMillis() + timeout;

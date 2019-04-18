@@ -6,7 +6,6 @@ import com.github.sisyphsu.common.cluster.cid.ClusterIDProperties;
 import com.github.sisyphsu.common.cluster.dlock.DistributedLock;
 import com.github.sisyphsu.common.cluster.dlock.DistributedLockProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.AuthInfo;
 import org.apache.curator.framework.CuratorFramework;
@@ -23,6 +22,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -57,7 +57,7 @@ public class ClusterAutoConfiguration {
         builder.retryPolicy(new RetryNTimes(props.getRetryTimes(), props.getRetryInterval()));
         builder.connectionTimeoutMs(props.getConnectionTimeoutMs());
         builder.sessionTimeoutMs(props.getSessionTimeoutMs());
-        if (CollectionUtils.isNotEmpty(props.getAuthInfos())) {
+        if (!CollectionUtils.isEmpty(props.getAuthInfos())) {
             List<AuthInfo> authInfoList = new ArrayList<>();
             for (ZookeeperProperties.AuthInfo authInfo : props.getAuthInfos()) {
                 authInfoList.add(new AuthInfo(authInfo.getScheme(), Base64.getDecoder().decode(authInfo.getAuth())));

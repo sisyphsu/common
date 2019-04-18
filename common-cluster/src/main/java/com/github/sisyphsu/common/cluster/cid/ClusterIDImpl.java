@@ -2,7 +2,6 @@ package com.github.sisyphsu.common.cluster.cid;
 
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
@@ -11,6 +10,7 @@ import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.zookeeper.CreateMode;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -210,7 +210,7 @@ public class ClusterIDImpl extends Thread implements ClusterID {
             }
             int nodeID = NumberUtils.toInt(id);
             long nodeTimestamp = NumberUtils.toLong(timestamp);
-            boolean locked = CollectionUtils.isNotEmpty(curator.getChildren().forPath(fullpath));
+            boolean locked = !CollectionUtils.isEmpty(curator.getChildren().forPath(fullpath));
             result.add(new ClusterIDNode(nodeID, nodeTimestamp, locked));
         }
         return result;

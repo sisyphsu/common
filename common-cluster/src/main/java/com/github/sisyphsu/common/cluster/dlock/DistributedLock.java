@@ -3,12 +3,12 @@ package com.github.sisyphsu.common.cluster.dlock;
 import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.util.StreamUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -201,7 +201,7 @@ public class DistributedLock {
             if (is == null) {
                 throw new IllegalStateException("can't find file: " + filename);
             }
-            return IOUtils.toString(is, Charsets.UTF_8);
+            return StreamUtils.copyToString(is, Charsets.UTF_8);
         } catch (IOException e) {
             throw new IllegalStateException("read file error: " + filename, e);
         }

@@ -4,10 +4,10 @@ import com.github.sisyphsu.common.cluster.utils.ScheduleUtils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.Collection;
