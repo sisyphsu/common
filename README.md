@@ -13,6 +13,8 @@ Provider some useful features for distributed cluster system, include:
 
 **[Click For Detail](./common-cluster)**
 
+**[点击查看中文版文档](https://sulin.me/2019/17G1YB6.html)**
+
 # License
 
 MIT
