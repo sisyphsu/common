@@ -13,7 +13,7 @@
     <url>https://github.com/sisyphsu/common</url>
 
     <properties>
-        <curator.version>4.1.0</curator.version>
+        <curator.version>2.13.0</curator.version>
     </properties>
 
     <modules>

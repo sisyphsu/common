@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeoutException;
 
 /**
  * test dlock
@@ -53,6 +54,26 @@ public class DistributedLockTest extends SpringBaseTest {
         }
 
         latch.await();
+    }
+
+    @Test
+    public void runInTradeLock() throws Exception {
+        dlock.runInLock(Arrays.asList("user:1001", "order:100000001"), () -> {
+            System.out.println("do business");
+        });
+    }
+
+    @Test
+    public void runInTradeLock2() throws Exception {
+        List<String> keys = Arrays.asList("user:1001", "order:100000001");
+        if (!dlock.lock(keys, 3000)) {
+            throw new TimeoutException("lock failed");
+        }
+        try {
+            System.out.println("do business");
+        } finally {
+            dlock.unlock(keys);
+        }
     }
 
 }

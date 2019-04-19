@@ -38,6 +38,31 @@ public class SnowFlakeIDTest {
     }
 
     @Test
+    public void testOne() {
+        int timestampBitNum = 40;
+        int nodeBitNum = 10;
+        int sequenceBitNum = 8;
+        SnowFlakeID flakeID = new SnowFlakeID(new ClusterID() {
+            @Override
+            public int getBitNum() {
+                return nodeBitNum;
+            }
+
+            @Override
+            public int get() {
+                return 1;
+            }
+
+            @Override
+            public ClusterIDStatus getStatus() {
+                return ClusterIDStatus.LOCK;
+            }
+        }, timestampBitNum, sequenceBitNum);
+
+        System.out.println(flakeID.generate());
+    }
+
+    @Test
     public void testSimple() {
         for (int i = 0; i < 5; i++) {
             long id = flakeID.generate();
