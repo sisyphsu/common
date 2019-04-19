@@ -11,7 +11,7 @@ Provider some useful features for distributed cluster system, include:
 - **SnowFlakeID**: provide an simple and efficient SnowFlakeID implementation, which based on **ClusterID**.
 - **TickID**: provide another distributed incremental ID generator, which based on **ZooKeeper** or **Redis**.
 
-[Check Detail](./common-cluster)
+**[Click For Detail](./common-cluster)**
 
 # License
 
