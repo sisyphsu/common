@@ -16,7 +16,7 @@ You can add this library like this:
 
 # Configuration
 
-This library use `zk` and `redis` as datasource:
+This library use `zookeeper` and `redis` as datasource:
 
 ```yaml
 spring:
@@ -46,11 +46,11 @@ The default `bitNum` was `8`, which means the `ClusterID` could be `[0, 256)`.
 
 The `ClusterID` has three status:
 
-- **NONE**: Didn't lock any ID, maybe starting or lose lock after reconnection
-- **LOCK**: Success, `ClusterID#get()` will return the unique id 
-- **UNLOCK**: Has an unique id, but lose connection to `ZooKeeper`, the lock may be token by other node
+- **NONE**: Didn't lock any ID, maybe starting or lost lock after reconnection.
+- **LOCK**: Success, `ClusterID#get()` will return the unique id.
+- **UNLOCK**: Has an unique id, but lose connection to `ZooKeeper`, the lock may be token by other node.
 
-Fetch `clusterID` example:
+Example:
 
 ```java
 public class ClusterIDTest extends SpringBaseTest {
