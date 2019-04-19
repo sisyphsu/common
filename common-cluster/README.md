@@ -10,7 +10,7 @@ You can add this library like this:
 <dependency>
     <groupId>com.github.sisyphsu</groupId>
     <artifactId>common-cluster</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 </dependency>
 ```
 
